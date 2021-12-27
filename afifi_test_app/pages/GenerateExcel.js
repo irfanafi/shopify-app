@@ -1,6 +1,6 @@
 import * as XLSX from "xlsx";
 
-export default function generateExcelFile(map, filters) {
+export function generateExcelFile(map, filters) {
   var wb = XLSX.utils.book_new();
   // For each product, fill up the sheet
   map.forEach((values, keys) => {

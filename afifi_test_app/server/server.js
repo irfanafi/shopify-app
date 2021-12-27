@@ -6,10 +6,17 @@ import Shopify, { ApiVersion } from "@shopify/shopify-api";
 import Koa from "koa";
 import next from "next";
 import Router from "koa-router";
-import store from 'store-js';
+import store from "store-js";
 import importOrder from "./handlers/posts/import-order";
-import koabody from "koa-body"
-
+import koabody from "koa-body";
+var bodyparser = require("koa-bodyparser");
+import {
+  connectToDb,
+  saveImportDetails,
+  saveImportTransactionDetails,
+  saveTransactionDetails,
+  saveUserDetails,
+} from "../backend/db_connection";
 
 dotenv.config();
 const port = parseInt(process.env.PORT, 10) || 8081;
@@ -36,17 +43,17 @@ const ACTIVE_SHOPIFY_SHOPS = {};
 
 app.prepare().then(async () => {
   const server = new Koa();
-  server.use(koabody())
   const router = new Router();
   server.keys = [Shopify.Context.API_SECRET_KEY];
   server.use(
     createShopifyAuth({
       async afterAuth(ctx) {
         // Access token and shop available in ctx.state.shopify
-        console.log("This is what youve been looking for")
+        connectToDb();
         const { shop, accessToken, scope } = ctx.state.shopify;
-        store.set('accessToken', accessToken)
-        store.set('shop', shop)
+        saveUserDetails(shop, accessToken);
+        store.set("accessToken", accessToken);
+        store.set("shop", shop);
         const host = ctx.query.host;
         ACTIVE_SHOPIFY_SHOPS[shop] = scope;
 
@@ -94,17 +101,41 @@ app.prepare().then(async () => {
     }
   );
 
-  router.post('/apps/afifistry/MiaoMiao/apiendpoint', async ctx => {
+  router.post("/apps/afifistry/MiaoMiao/apiendpoint", async (ctx) => {
     ctx.body = ctx.request.body;
     ctx.res.statusCode = 200;
-});
+  });
 
-  router.post('/importOrder',async (ctx) => {
-    console.log("This the query")
-    console.log(ctx.request.body)
-    const result = await importOrder(ctx, store.get('accessToken'), store.get('shop'))
+  router.post("/importOrder", bodyparser(), async (ctx) => {
+    console.log("This the query");
+    console.log(ctx.request.body);
+    const result = await importOrder(
+      ctx,
+      store.get("accessToken"),
+      store.get("shop")
+    );
     ctx.res.statusCode = 200;
-  })
+  });
+
+  router.post("/saveImportDetails", bodyparser(), async (ctx) => {
+    saveImportTransactionDetails(
+      "import",
+      store.get("shop"),
+      ctx.request.body.numberOfOrders
+    );
+  });
+
+  router.post("/exportOrders", async (ctx) => {
+    console.log("This the query");
+    console.log(ctx.request.body);
+    const result = await importOrder(
+      ctx,
+      store.get("accessToken"),
+      store.get("shop")
+    );
+    saveTransactionDetails("export", store.get("shop"));
+    ctx.res.statusCode = 200;
+  });
 
   router.get("(/_next/static/.*)", handleRequest); // Static content is clear
   router.get("/_next/webpack-hmr", handleRequest); // Webpack content is clear
