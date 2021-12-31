@@ -1,3 +1,4 @@
+import store from "store-js";
 var mysql = require("mysql");
 
 var con = mysql.createConnection({
@@ -32,28 +33,90 @@ export async function saveImportTransactionDetails(
   shopName,
   numberOfOrders
 ) {
-  let query = `INSERT INTO importHistory 
-        (dateCreated, dateCompleted, typeOfTransaction, username, numberOfOrders, orderNumber) VALUES (?, ?, ?, ?, ?, ?);`;
+  let maxOrderIDQuery = `select max(orderID) as maxid from importHistory where username = "${shopName}"`;
 
-  con.query(
-    query,
-    [
-      new Date(),
-      new Date(),
-      transactionType,
-      shopName,
-      parseInt(numberOfOrders),
-    ],
-    (err, rows) => {
-      if (err) throw err;
-      console.log("Row inserted with id = " + rows.insertId);
-    }
-  );
+  let query = `INSERT INTO importHistory 
+        (dateCreated, dateCompleted, typeOfTransaction, username, numberOfOrders, orderID) VALUES (?, ?, ?, ?, ?, ?);`;
+  con.query(maxOrderIDQuery, (err, result, fields) => {
+    if (err) throw err;
+    console.log("Result = ");
+    let maxOrderID = result[0].maxid;
+    con.query(
+      query,
+      [
+        new Date(),
+        new Date(),
+        transactionType,
+        shopName,
+        parseInt(numberOfOrders),
+        maxOrderID + 1,
+      ],
+      (err, rows) => {
+        if (err) throw err;
+        console.log("Row inserted with id = " + rows.insertId);
+      }
+    );
+  });
 }
 
-export function getPreviousExport() {}
+export async function saveProductExportTransactionDetails(
+  shopName,
+  numberOfProducts
+) {
+  let maxOrderIDQuery = `select max(orderID) as maxid from productexporthistory where username = "${shopName}"`;
 
-export function getPreviousImports() {}
+  let query = `INSERT INTO productExportHistory 
+        (dateCreated, dateCompleted, typeOfTransaction, username, numberOfProducts, orderID) VALUES (?, ?, ?, ?, ?, ?);`;
+
+  con.query(maxOrderIDQuery, (err, result, fields) => {
+    if (err) throw err;
+    console.log("Result = ");
+    let maxOrderID = result[0].maxid;
+    con.query(
+      query,
+      [
+        new Date(),
+        new Date(),
+        "export",
+        shopName,
+        numberOfProducts,
+        maxOrderID + 1,
+      ],
+      (err, rows) => {
+        if (err) throw err;
+        console.log("Export request saved for shop:", shopName);
+      }
+    );
+  });
+}
+
+export function getPreviousExports(shopName) {
+  let query = `select * from productexporthistory where username = "${shopName}"`;
+  let resultInJSON;
+  return new Promise((resolve, reject) => {
+    con.query(query, (err, result, fields) => {
+      if (err) return reject(err);
+      console.log("Result = ");
+      resultInJSON = JSON.parse(JSON.stringify(result));
+      resolve(resultInJSON);
+    });
+  });
+}
+
+export function getPreviousImports(shopName) {
+  let query = `select * from importhistory where username = "${shopName}"`;
+  let resultInJSON;
+  return new Promise((resolve, reject) => {
+    con.query(query, (err, result, fields) => {
+      if (err) return reject(err);
+      console.log("Result = ");
+      console.log(result);
+      let resultInJSON = JSON.parse(JSON.stringify(result));
+      console.log(resultInJSON);
+      resolve(resultInJSON);
+    });
+  });
+}
 
 export function disconnectFromDb() {
   con.end(function (err) {

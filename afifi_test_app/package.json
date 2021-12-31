@@ -29,6 +29,8 @@
     "@shopify/polaris-icons": "^4.10.0",
     "apollo-boost": "^0.4.9",
     "axios": "^0.24.0",
+    "browserslist": "^4.19.1",
+    "caniuse-lite": "^1.0.30001292",
     "cross-env": "^7.0.3",
     "dotenv": "^8.2.0",
     "graphql": "^14.5.8",

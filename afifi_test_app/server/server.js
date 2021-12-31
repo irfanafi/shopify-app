@@ -8,12 +8,13 @@ import next from "next";
 import Router from "koa-router";
 import store from "store-js";
 import importOrder from "./handlers/posts/import-order";
-import koabody from "koa-body";
 var bodyparser = require("koa-bodyparser");
 import {
   connectToDb,
-  saveImportDetails,
+  getPreviousExports,
+  getPreviousImports,
   saveImportTransactionDetails,
+  saveProductExportTransactionDetails,
   saveTransactionDetails,
   saveUserDetails,
 } from "../backend/db_connection";
@@ -51,9 +52,9 @@ app.prepare().then(async () => {
         // Access token and shop available in ctx.state.shopify
         connectToDb();
         const { shop, accessToken, scope } = ctx.state.shopify;
-        saveUserDetails(shop, accessToken);
         store.set("accessToken", accessToken);
         store.set("shop", shop);
+        saveUserDetails();
         const host = ctx.query.host;
         ACTIVE_SHOPIFY_SHOPS[shop] = scope;
 
@@ -125,6 +126,13 @@ app.prepare().then(async () => {
     );
   });
 
+  router.post("/saveProductExportDetails", bodyparser(), async (ctx) => {
+    saveProductExportTransactionDetails(
+      store.get("shop"),
+      ctx.request.body.noOfProducts
+    );
+  });
+
   router.post("/exportOrders", async (ctx) => {
     console.log("This the query");
     console.log(ctx.request.body);
@@ -134,6 +142,18 @@ app.prepare().then(async () => {
       store.get("shop")
     );
     saveTransactionDetails("export", store.get("shop"));
+    ctx.res.statusCode = 200;
+  });
+
+  router.get("/getPreviousExports", async (ctx) => {
+    let result = await getPreviousExports(store.get("shop"));
+    ctx.body = result;
+    ctx.res.statusCode = 200;
+  });
+
+  router.get("/getPreviousImports", async (ctx) => {
+    let result = await getPreviousImports(store.get("shop"));
+    ctx.body = result;
     ctx.res.statusCode = 200;
   });
 
