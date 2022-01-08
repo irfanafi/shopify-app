@@ -52,6 +52,7 @@ class ImportPage extends React.Component {
           <Layout.Section>
             <NestedDropZone
               setFile={(fileUploaded) => this.setState({ file: fileUploaded })}
+              checkProducts={() => getProductsForCurrentFile()}
             />
             {this.state.file ? (
               <ImportButton fileUploaded={this.state.file} />
@@ -79,6 +80,7 @@ function NestedDropZone(props) {
     (_dropFiles, acceptedFiles, _rejectedFiles) => {
       setFile(() => acceptedFiles[0]);
       props.setFile(acceptedFiles[0]);
+      props.checkProducts();
     },
     []
   );
@@ -110,3 +112,7 @@ function NestedDropZone(props) {
     </DropZone>
   );
 }
+
+let getProductsForCurrentFile = () => {
+  this.state.setState({ excelProducts: null });
+};

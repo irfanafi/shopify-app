@@ -11,8 +11,6 @@ import {
 import { TitleBar } from "@shopify/app-bridge-react";
 import store from "store-js";
 
-const img = "https://cdn.shopify.com/s/files/1/0757/9955/files/empty-state.svg";
-
 class ImportMainPage extends React.Component {
   state = { open: false, downloaded: false };
   render() {
@@ -48,8 +46,8 @@ class ImportMainPage extends React.Component {
           </Layout.Section>
 
           <Layout.Section>
-            <Card title="Previous Exports" sectioned>
-              <p>Choose what you'd like to export from the filters</p>
+            <Card title="Previous Imports" sectioned>
+              <p>Review your previous imports</p>
 
               {/* This part onwards should be dynamic */}
               <Card.Section>
